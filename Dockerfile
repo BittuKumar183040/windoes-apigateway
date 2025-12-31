@@ -1,10 +1,10 @@
-FROM gradle:8.13.0-jdk21-alpine AS build
+FROM alpine/java:21-jdk AS build
 WORKDIR /app
 COPY . .
 RUN chmod +x gradlew
 RUN ./gradlew clean build -x test
 
-FROM openjdk:21-alpine
+FROM alpine/java:21-jdk
 RUN apk update && apk upgrade
 RUN adduser -D bqphyapp
 WORKDIR /app
