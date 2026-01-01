@@ -11,5 +11,5 @@ WORKDIR /app
 COPY --from=build /app/build/libs/*.jar /app/application.jar
 RUN chown -R windoesapp:windoesapp /app
 USER windoesapp
-EXPOSE 8080
+EXPOSE 8090
 ENTRYPOINT ["java", "-jar", "application.jar"]
