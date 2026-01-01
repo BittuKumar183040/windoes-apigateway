@@ -3,8 +3,19 @@ set -e
 
 APP_NAME="gateway"
 CONTAINER_NAME="gateway"
-PORT_MAPPING="8080:80"
 ENV_FILE=".env"
+
+if [ -f "$ENV_FILE" ]; then
+  export $(grep -v '^#' "$ENV_FILE" | xargs)
+else
+  echo "❌ .env file not found"
+  exit 1
+fi
+
+if [ -z "$PORT" ]; then
+  echo "❌ PORT is not set in .env"
+  exit 1
+fi
 
 echo "▶ Fetching latest code..."
 git fetch origin
@@ -22,8 +33,8 @@ echo "▶ Stopping old container (if exists)..."
 podman stop "$CONTAINER_NAME" 2>/dev/null || true
 podman rm "$CONTAINER_NAME" 2>/dev/null || true
 
-echo "▶ Running new container..."
-podman run -d --name "$CONTAINER_NAME" --restart=always --env-file "$ENV_FILE" -p $PORT_MAPPING "$IMAGE_TAG"
+echo "▶ Running new container on port $PORT → 80..."
+podman run -d --name "$CONTAINER_NAME" --restart=always --env-file "$ENV_FILE" -p "${PORT}:80" "$IMAGE_TAG"
 
 echo "▶ Cleaning old images..."
 podman image prune -f
