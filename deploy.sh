@@ -2,41 +2,41 @@
 set -e
 
 APP_NAME="gateway"
-CONTAINER_NAME="gateway"
-ENV_FILE=".env"
+CONTAINER_NAME="windoes-gateway"
+ENV_FILE="/home/bk183040/windoes/windoes-apigateway/.env"
 
 if [ -f "$ENV_FILE" ]; then
   export $(grep -v '^#' "$ENV_FILE" | xargs)
 else
-  echo "❌ .env file not found"
+  echo " .env file not found"
   exit 1
 fi
 
 if [ -z "$PORT" ]; then
-  echo "❌ PORT is not set in .env"
+  echo " PORT is not set in .env"
   exit 1
 fi
 
-echo "▶ Fetching latest code..."
+echo "Fetching latest code..."
 git fetch origin
 git pull origin main
 
-echo "▶ Getting git commit hash..."
+echo "Getting git commit hash..."
 COMMIT_HASH=$(git rev-parse --short HEAD)
 
 IMAGE_TAG="${APP_NAME}:${COMMIT_HASH}"
 
-echo "▶ Building image: $IMAGE_TAG"
-podman build -t "$IMAGE_TAG" .
+echo "Building image: $IMAGE_TAG"
+podman build -t "$IMAGE_TAG" -t "${APP_NAME}:latest" .
 
-echo "▶ Stopping old container (if exists)..."
+echo "Stopping old container (if exists)..."
 podman stop "$CONTAINER_NAME" 2>/dev/null || true
 podman rm "$CONTAINER_NAME" 2>/dev/null || true
 
-echo "▶ Running new container on port $PORT → 8090"
-podman run -d --name "$CONTAINER_NAME" --restart=always --env-file "$ENV_FILE" -p "${PORT}:8090" "$IMAGE_TAG"
+echo "Running new container on port $PORT → 8090"
+podman run -d --name "$CONTAINER_NAME" --network windoes-net --restart=always --env-file "$ENV_FILE" -p "${PORT}:8090" "$IMAGE_TAG"
 
-echo "▶ Cleaning old images..."
+echo "Cleaning old images..."
 podman image prune -f
 
-echo "✅ Deployment successful: $IMAGE_TAG"
+echo "Deployment successful: $IMAGE_TAG"
